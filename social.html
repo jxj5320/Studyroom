@@ -81,7 +81,7 @@
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
-    padding: 16px 16px 28px;
+    padding: calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(28px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
     gap: 14px;
   }
 
@@ -474,6 +474,12 @@
 <div class="toast" id="toast" hidden></div>
 
 <script>
+if (!window.SB) {
+  document.getElementById("stage").innerHTML =
+    '<div class="card"><p class="empty-note">⚠️ 필수 파일(sb-shared.js)을 불러오지 못했어요.<br>GitHub 저장소에 sb-shared.js 파일이 있는지, 이름이 정확한지 확인해줘.</p></div>';
+  var dl0 = document.getElementById("dateLabel");
+  if (dl0) dl0.textContent = "오류";
+} else {
 (function () {
   "use strict";
 
@@ -1331,6 +1337,7 @@
 
   init();
 })();
+}
 </script>
 <script>
   if ("serviceWorker" in navigator) {
