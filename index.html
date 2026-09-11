@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#efece0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="담임방">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%23efece0'/%3E%3Ccircle cx='50' cy='50' r='40' fill='none' stroke='%231f6e5c' stroke-width='7'/%3E%3Ctext x='50' y='66' font-size='40' font-family='Georgia,serif' text-anchor='middle' fill='%231f6e5c'%3E%EB%8B%B4%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>담임방</title>
+<style>
+  :root {
+    --paper: #efece0; --paper-raised: #faf8ee; --ink: #20302a; --ink-soft: #5c6a62;
+    --teal: #1f6e5c; --teal-soft: #dceae4; --stamp: #c23b2e; --stamp-soft: #f6ddd8;
+    --mustard: #b9791f; --mustard-soft: #f3e3c2; --line: #d9d4c2; --shadow: rgba(32, 48, 42, 0.10);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #151b18; --paper-raised: #1e2622; --ink: #e7e4d6; --ink-soft: #a9b2aa;
+      --teal: #59b79b; --teal-soft: #20342d; --stamp: #e2685a; --stamp-soft: #3a211d;
+      --mustard: #e3b65c; --mustard-soft: #3a2e17; --line: #333f38; --shadow: rgba(0, 0, 0, 0.45);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #151b18; --paper-raised: #1e2622; --ink: #e7e4d6; --ink-soft: #a9b2aa;
+    --teal: #59b79b; --teal-soft: #20342d; --stamp: #e2685a; --stamp-soft: #3a211d;
+    --mustard: #e3b65c; --mustard-soft: #3a2e17; --line: #333f38; --shadow: rgba(0, 0, 0, 0.45);
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { background: var(--paper); }
+  body {
+    margin: 0; background: var(--paper);
+    background-image: radial-gradient(var(--line) 1px, transparent 1px); background-size: 22px 22px;
+    color: var(--ink); font-family: "IBM Plex Sans KR", "Malgun Gothic", sans-serif; -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 { font-family: "Gowun Batang", serif; margin: 0; text-wrap: balance; }
+  .mono { font-family: "IBM Plex Mono", "IBM Plex Sans KR", monospace; font-variant-numeric: tabular-nums; }
+
+  #app { max-width: 560px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; padding: 16px 16px 28px; gap: 14px; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .seal-mini {
+    width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--teal); color: var(--teal);
+    display: flex; align-items: center; justify-content: center; font-family: "Gowun Batang", serif; font-size: 17px; font-weight: 700;
+    transform: rotate(-6deg); flex-shrink: 0;
+  }
+  .brand h1 { font-size: 19px; color: var(--ink); }
+  .dateline { margin: 2px 0 0; font-size: 12.5px; color: var(--ink-soft); }
+  .topbar-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .ghost-btn {
+    border: 1px solid var(--line); background: var(--paper-raised); color: var(--ink-soft);
+    padding: 7px 12px; border-radius: 999px; font-size: 12.5px; font-family: inherit; cursor: pointer; flex-shrink: 0;
+  }
+  .ghost-btn.icon-only { width: 34px; height: 34px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+  .ghost-btn:hover { border-color: var(--teal); color: var(--teal); }
+  .ghost-btn:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+
+  #stage { flex: 1; display: flex; flex-direction: column; gap: 14px; }
+  .card { background: var(--paper-raised); border: 1px solid var(--line); border-radius: 16px; padding: 18px; box-shadow: 0 6px 18px var(--shadow); }
+  .eyebrow { font-size: 12px; letter-spacing: 0.06em; color: var(--teal); text-transform: uppercase; font-weight: 600; margin: 0 0 6px; }
+  .lead { font-size: 20px; margin-bottom: 4px; }
+  .sub { color: var(--ink-soft); font-size: 13.5px; margin: 6px 0 14px; line-height: 1.5; }
+
+  /* ---- subject picker ---- */
+  .pick-list { display: flex; flex-direction: column; gap: 8px; }
+  .pick-row {
+    display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px;
+    border: 1px solid var(--line); border-radius: 12px; background: var(--paper); cursor: pointer; text-align: left; font-family: inherit;
+  }
+  .pick-row.on { border-color: var(--teal); background: var(--teal-soft); }
+  .pick-row.disabled { opacity: 0.5; cursor: not-allowed; }
+  .pick-box {
+    width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--line); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 13px; color: #fff;
+  }
+  .pick-row.on .pick-box { background: var(--teal); border-color: var(--teal); }
+  .pick-emoji { font-size: 18px; flex-shrink: 0; }
+  .pick-body { flex: 1; min-width: 0; }
+  .pick-title { font-size: 14.5px; font-weight: 500; }
+  .pick-meta { font-size: 11.5px; color: var(--ink-soft); margin-top: 2px; }
+  .pick-tag {
+    font-size: 11px; color: var(--mustard); background: var(--mustard-soft); border-radius: 999px; padding: 2px 8px; flex-shrink: 0;
+  }
+  .time-est { font-size: 12.5px; color: var(--ink-soft); margin: 12px 0 2px; }
+  .time-est.warn { color: var(--mustard); }
+  .primary-btn {
+    display: block; width: 100%; margin-top: 16px; background: var(--teal); color: var(--paper-raised);
+    border: none; border-radius: 12px; padding: 14px; font-size: 15.5px; font-weight: 600; font-family: inherit; cursor: pointer;
+  }
+  .primary-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .primary-btn:not(:disabled):hover { filter: brightness(1.06); }
+
+  /* ---- today's plan ---- */
+  .subj-list { display: flex; flex-direction: column; gap: 8px; }
+  .subj-row {
+    display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px 14px;
+    border: 1px solid var(--line); border-radius: 12px; background: var(--paper); text-decoration: none; color: inherit;
+  }
+  a.subj-row { cursor: pointer; }
+  .subj-row.done { background: var(--teal-soft); border-color: var(--teal); }
+  .subj-row.paused { background: var(--mustard-soft); border-color: var(--mustard); }
+  .subj-row.disabled { opacity: 0.55; }
+  .subj-status {
+    width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--line); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--ink-soft);
+  }
+  .subj-row.done .subj-status { border-color: var(--teal); background: var(--teal); color: #fdfcf6; }
+  .subj-row.paused .subj-status { border-color: var(--mustard); background: var(--mustard); color: #fdfcf6; }
+  .subj-body { flex: 1; min-width: 0; }
+  .subj-title { font-size: 14.5px; font-weight: 500; }
+  .subj-meta { font-size: 11.5px; color: var(--ink-soft); margin-top: 2px; }
+  .subj-chevron { color: var(--ink-soft); font-size: 15px; flex-shrink: 0; }
+  .plan-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; gap: 10px; }
+  .stop-link {
+    font-size: 12.5px; color: var(--ink-soft); background: none; border: none; text-decoration: underline; cursor: pointer; font-family: inherit; white-space: nowrap;
+  }
+
+  /* ---- done ---- */
+  .done-wrap { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; padding: 12px 0 6px; }
+  .stamp {
+    width: 122px; height: 122px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-family: "Gowun Batang", serif; font-size: 21px; font-weight: 700; transform: rotate(-7deg); position: relative;
+    border: 4px solid var(--stamp); color: var(--stamp);
+  }
+  .stamp::after {
+    content: ""; position: absolute; inset: -6px; border-radius: 50%;
+    background: radial-gradient(circle, transparent 60%, currentColor 61%, transparent 63%); opacity: 0.25;
+  }
+  .done-title { font-size: 22px; }
+  .done-sub { color: var(--ink-soft); font-size: 14px; max-width: 320px; line-height: 1.55; }
+
+  .empty-note { color: var(--ink-soft); font-size: 13.5px; text-align: center; padding: 30px 10px; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--ink); color: var(--paper);
+    padding: 10px 16px; border-radius: 10px; font-size: 13px; max-width: 86%; text-align: center; box-shadow: 0 8px 20px var(--shadow); z-index: 50;
+  }
+
+  .overlay { position: fixed; inset: 0; background: rgba(20, 26, 22, 0.5); display: flex; align-items: flex-end; justify-content: center; z-index: 40; }
+  .overlay-panel {
+    background: var(--paper); width: 100%; max-width: 560px; max-height: 88dvh; border-radius: 20px 20px 0 0;
+    padding: 18px 18px 26px; overflow-y: auto; border: 1px solid var(--line); border-bottom: none;
+  }
+  .overlay-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .icon-btn { background: none; border: none; font-size: 18px; color: var(--ink-soft); cursor: pointer; padding: 4px; }
+  .overlay-panel h3 { font-size: 14px; color: var(--ink-soft); font-family: "IBM Plex Sans KR"; font-weight: 600; margin: 18px 0 10px; }
+  .overlay-panel section:first-of-type h3 { margin-top: 0; }
+
+  .hist-block { padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .hist-date { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 6px; }
+  .hist-chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .hist-chip { font-size: 11.5px; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+  .hist-chip.done { background: var(--teal-soft); color: var(--teal); }
+  .hist-chip.paused { background: var(--mustard-soft); color: var(--mustard); }
+  .hist-chip.in_progress { background: var(--stamp-soft); color: var(--stamp); }
+
+  #apiKeyInput {
+    width: 100%; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); color: var(--ink);
+    padding: 11px 13px; font-size: 14px; font-family: inherit; resize: vertical; line-height: 1.5;
+  }
+  #modelInput {
+    width: 100%; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink);
+    padding: 9px 11px; font-size: 13.5px; font-family: inherit; margin-top: 6px;
+  }
+  .key-status { font-size: 12.5px; margin-top: 10px; line-height: 1.5; }
+  .key-status.ok { color: var(--teal); }
+  .key-status.off { color: var(--ink-soft); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .card, .done-wrap { animation: rise 0.35s ease both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="sb-shared.js"></script>
+</head>
+<body>
+
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="seal-mini">담</div>
+      <div>
+        <h1>담임방</h1>
+        <p class="dateline mono" id="dateLabel">불러오는 중…</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="ghost-btn icon-only" id="settingsBtn" type="button" aria-label="AI 설정" title="AI 설정">⚙</button>
+      <button class="ghost-btn" id="parentBtn" type="button">부모님</button>
+    </div>
+  </header>
+  <main id="stage"></main>
+</div>
+
+<div class="overlay" id="parentOverlay" hidden>
+  <div class="overlay-panel">
+    <div class="overlay-head">
+      <h2>부모님 리포트</h2>
+      <button class="icon-btn" id="closeParent" type="button" aria-label="닫기">✕</button>
+    </div>
+    <section>
+      <h3>최근 학습 기록 (전 과목)</h3>
+      <div id="historyList"></div>
+      <p class="sub" style="margin-top:10px">자세한 대화 내용은 각 과목방의 "부모님" 화면에서 볼 수 있어요.</p>
+    </section>
+  </div>
+</div>
+
+<div class="overlay" id="settingsOverlay" hidden>
+  <div class="overlay-panel">
+    <div class="overlay-head">
+      <h2>AI 설정</h2>
+      <button class="icon-btn" id="closeSettings" type="button" aria-label="닫기">✕</button>
+    </div>
+    <section>
+      <h3>Anthropic API 키</h3>
+      <p class="sub" style="margin:0 0 10px">
+        여기서 넣은 API 키는 이 기기(브라우저)에 저장되고, 담임방과 모든 과목방이 같이 사용해요. 과목방마다 따로 넣을 필요 없어요.
+      </p>
+      <textarea id="apiKeyInput" rows="2" placeholder="sk-ant-..."></textarea>
+      <input type="text" id="modelInput" placeholder="모델 (선택, 비워두면 기본값: claude-sonnet-5)">
+      <button type="button" class="primary-btn" id="saveKeyBtn">저장</button>
+      <button type="button" class="stop-link" id="clearKeyBtn" style="margin-top:10px">키 삭제</button>
+      <p class="key-status" id="keyStatus"></p>
+    </section>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var today = SB.kstDateStr();
+  document.getElementById("dateLabel").textContent = SB.kstLabel();
+
+  // 아직 실제로 만들어진 과목방만 true. 나머지는 "곧 추가돼요"로 표시.
+  var BUILT = { social: true, korean: false, math: false, science: false, english: false };
+
+  var stage = document.getElementById("stage");
+  var toastEl = document.getElementById("toast");
+  var pickerSelection = [];
+
+  function showToast(msg, ms) {
+    toastEl.textContent = msg;
+    toastEl.hidden = false;
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(function () { toastEl.hidden = true; }, ms || 3200);
+  }
+
+  function statusLabel(st) {
+    return st === "done" ? "✅ 완료" : st === "paused" ? "⏸️ 이어서" : st === "in_progress" ? "⏳ 진행중" : "예정";
+  }
+
+  function latestStatusFor(subjectKey) {
+    var all = SB.lsGet(SB.LS.status, {});
+    var dates = Object.keys(all).sort().reverse();
+    for (var i = 0; i < dates.length; i++) {
+      var rec = all[dates[i]] && all[dates[i]][subjectKey];
+      if (rec) return { date: dates[i], rec: rec };
+    }
+    return null;
+  }
+
+  function init() {
+    var assignment = SB.getTodayAssignment(today);
+    if (assignment && assignment.subjects && assignment.subjects.length) {
+      renderPlan(assignment.subjects);
+    } else {
+      renderPicker();
+    }
+  }
+
+  // ---------- subject picker ----------
+  function renderPicker() {
+    pickerSelection = [];
+    stage.innerHTML =
+      '<div class="card">' +
+      '<p class="eyebrow">오늘의 계획</p>' +
+      '<p class="lead">오늘 어떤 과목 할까?</p>' +
+      '<p class="sub">학교 진도·학원 일정을 생각해서 오늘 할 과목만 골라줘. 보통 하루 1~3과목, 35~50분 정도면 충분해.</p>' +
+      '<div class="pick-list" id="pickList">' +
+      SB.SUBJECTS.map(pickRowHtml).join("") +
+      "</div>" +
+      '<p class="time-est" id="timeEst"></p>' +
+      '<button type="button" class="primary-btn" id="confirmBtn" disabled>오늘 공부 시작하기</button>' +
+      "</div>";
+
+    document.getElementById("pickList").addEventListener("click", function (e) {
+      var row = e.target.closest(".pick-row");
+      if (!row || row.classList.contains("disabled")) return;
+      var key = row.getAttribute("data-key");
+      var idx = pickerSelection.indexOf(key);
+      if (idx >= 0) { pickerSelection.splice(idx, 1); row.classList.remove("on"); row.querySelector(".pick-box").textContent = ""; }
+      else { pickerSelection.push(key); row.classList.add("on"); row.querySelector(".pick-box").textContent = "✓"; }
+      refreshPicker();
+    });
+
+    document.getElementById("confirmBtn").addEventListener("click", function () {
+      if (!pickerSelection.length) return;
+      SB.setTodayAssignment(today, pickerSelection.slice());
+      renderPlan(pickerSelection.slice());
+    });
+
+    refreshPicker();
+  }
+
+  function pickRowHtml(s) {
+    var built = BUILT[s.key];
+    var last = latestStatusFor(s.key);
+    var hint = last && last.rec.status === "paused" ? '<div class="pick-meta">▶️ 지난번에 이어서 할 내용이 있어요</div>' : "";
+    return (
+      '<button type="button" class="pick-row' + (built ? "" : " disabled") + '" data-key="' + s.key + '">' +
+      '<span class="pick-box"></span>' +
+      '<span class="pick-emoji">' + s.emoji + "</span>" +
+      '<span class="pick-body"><span class="pick-title">' + s.label + '</span>' +
+      '<div class="pick-meta">' + s.minutes[0] + "~" + s.minutes[1] + "분" + "</div>" + hint + "</span>" +
+      (built ? "" : '<span class="pick-tag">곧 추가돼요</span>') +
+      "</button>"
+    );
+  }
+
+  function refreshPicker() {
+    var total = 0;
+    pickerSelection.forEach(function (key) {
+      var s = SB.SUBJECTS.filter(function (x) { return x.key === key; })[0];
+      if (s) total += (s.minutes[0] + s.minutes[1]) / 2;
+    });
+    var est = document.getElementById("timeEst");
+    if (pickerSelection.length) {
+      est.textContent = "⏱ 예상시간: 약 " + Math.round(total) + "분";
+      est.className = "time-est" + (total > 50 ? " warn" : "");
+      if (total > 50) est.textContent += " — 오늘 좀 많아요. 다 못해도 괜찮아, 남은 건 다음에 하면 돼.";
+    } else {
+      est.textContent = "";
+    }
+    document.getElementById("confirmBtn").disabled = !pickerSelection.length;
+  }
+
+  // ---------- today's plan ----------
+  function renderPlan(subjectKeys) {
+    var statusMap = SB.getStatusForDate(today);
+    var rows = subjectKeys.map(function (key) {
+      var s = SB.SUBJECTS.filter(function (x) { return x.key === key; })[0];
+      if (!s) return "";
+      var rec = statusMap[key];
+      var st = rec ? rec.status : "pending";
+      return subjRowHtml(s, st, rec);
+    }).join("");
+
+    var doneCount = subjectKeys.filter(function (key) {
+      var rec = statusMap[key];
+      return rec && rec.status === "done";
+    }).length;
+    var allDone = doneCount === subjectKeys.length;
+
+    if (allDone) {
+      renderDayDone(subjectKeys, statusMap);
+      return;
+    }
+
+    stage.innerHTML =
+      '<div class="card">' +
+      '<p class="eyebrow">오늘의 공부</p>' +
+      '<p class="lead" style="margin-bottom:10px">눌러서 그 과목방으로 가자</p>' +
+      '<div class="subj-list">' + rows + "</div>" +
+      '<div class="plan-foot">' +
+      '<span class="sub" style="margin:0">' + doneCount + "/" + subjectKeys.length + " 완료</span>" +
+      '<button type="button" class="stop-link" id="editBtn">과목 다시 고르기</button>' +
+      "</div>" +
+      "</div>";
+
+    document.getElementById("editBtn").addEventListener("click", renderPicker);
+  }
+
+  function subjRowHtml(s, st, rec) {
+    var built = BUILT[s.key];
+    var icon = st === "done" ? "✓" : st === "paused" ? "🔖" : "";
+    var metaBits = [statusLabel(st)];
+    if (rec && rec.nextStart && st === "paused") metaBits.push("다음: " + rec.nextStart);
+    var cls = "subj-row" + (st === "done" ? " done" : st === "paused" ? " paused" : "") + (built ? "" : " disabled");
+    var inner =
+      '<span class="subj-status">' + icon + "</span>" +
+      '<span class="subj-body"><span class="subj-title">' + s.emoji + " " + s.label + '</span>' +
+      '<div class="subj-meta">' + SB.escapeHtml(metaBits.join(" · ")) + "</div></span>" +
+      (built && st !== "done" ? '<span class="subj-chevron">›</span>' : "");
+    if (built) {
+      return '<a class="' + cls + '" href="' + s.href + '">' + inner + "</a>";
+    }
+    return '<div class="' + cls + '">' + inner + '<span class="pick-tag">곧 추가돼요</span></div>';
+  }
+
+  function renderDayDone(subjectKeys, statusMap) {
+    stage.innerHTML =
+      '<div class="card done-wrap">' +
+      '<div class="stamp">완료</div>' +
+      '<h2 class="done-title">오늘 공부 끝! 수고했어.</h2>' +
+      '<p class="done-sub">오늘 한 과목: ' + subjectKeys.map(function (k) {
+        var s = SB.SUBJECTS.filter(function (x) { return x.key === k; })[0];
+        return s ? s.emoji + " " + s.label : k;
+      }).join(", ") + "</p>" +
+      '<button type="button" class="stop-link" id="editBtn2">과목 다시 고르기 / 더 하기</button>' +
+      "</div>";
+    document.getElementById("editBtn2").addEventListener("click", renderPicker);
+  }
+
+  // ---------- parent view ----------
+  var overlay = document.getElementById("parentOverlay");
+  document.getElementById("parentBtn").addEventListener("click", openParentView);
+  document.getElementById("closeParent").addEventListener("click", function () { overlay.hidden = true; });
+
+  function openParentView() {
+    overlay.hidden = false;
+    var histEl = document.getElementById("historyList");
+    if (!SB.storageOk) { histEl.innerHTML = '<p class="empty-note">저장 기능을 사용할 수 없어 기록을 볼 수 없어요.</p>'; return; }
+    var recent = SB.getRecentStatusDates(14);
+    if (!recent.length) { histEl.innerHTML = '<p class="empty-note">아직 기록이 없어요.</p>'; return; }
+    histEl.innerHTML = recent.map(function (d) {
+      var chips = Object.keys(d.subjects).map(function (key) {
+        var s = SB.SUBJECTS.filter(function (x) { return x.key === key; })[0];
+        var label = s ? s.emoji + " " + s.label : key;
+        var st = d.subjects[key].status || "in_progress";
+        return '<span class="hist-chip ' + st + '">' + SB.escapeHtml(label) + " " + statusLabel(st) + "</span>";
+      }).join("");
+      return '<div class="hist-block"><div class="hist-date mono">' + SB.fmtShortDate(d.date) + '</div><div class="hist-chip-row">' + chips + "</div></div>";
+    }).join("");
+  }
+
+  // ---------- settings (API key, shared) ----------
+  SB.migrateLegacyKey("sr_api_key_v1", "sr_model_v1");
+  var settingsOverlay = document.getElementById("settingsOverlay");
+  document.getElementById("settingsBtn").addEventListener("click", openSettings);
+  document.getElementById("closeSettings").addEventListener("click", function () { settingsOverlay.hidden = true; });
+
+  function openSettings() {
+    settingsOverlay.hidden = false;
+    document.getElementById("apiKeyInput").value = SB.getApiKey();
+    document.getElementById("modelInput").value = SB.getModel();
+    updateKeyStatus();
+  }
+  function updateKeyStatus() {
+    var el = document.getElementById("keyStatus");
+    if (SB.getApiKey()) { el.textContent = "✅ API 키가 저장되어 있어요. (이 브라우저에서 모든 방이 같이 씀)"; el.className = "key-status ok"; }
+    else { el.textContent = "아직 키가 없어요. 키를 넣어야 과목방에서 AI 선생님을 쓸 수 있어요."; el.className = "key-status off"; }
+  }
+  document.getElementById("saveKeyBtn").addEventListener("click", function () {
+    SB.setApiKey(document.getElementById("apiKeyInput").value.trim());
+    SB.setModel(document.getElementById("modelInput").value.trim());
+    updateKeyStatus();
+    showToast("저장했어요.");
+  });
+  document.getElementById("clearKeyBtn").addEventListener("click", function () {
+    SB.setApiKey("");
+    document.getElementById("apiKeyInput").value = "";
+    updateKeyStatus();
+  });
+
+  init();
+})();
+</script>
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("service-worker.js").catch(function () {});
+    });
+  }
+</script>
+</body>
+</html>
